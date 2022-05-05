@@ -19,6 +19,8 @@ struct Mesh
 
 void CubeMesh(Mesh& mesh, const FVector& size);
 
+void CubeMesh(Mesh& mesh, const FVector& size, const FVector& vertexOffset);
+
 void AddRectangleTo(Mesh& mesh,
 	const FVector& bottomLeft, const FVector& bottomRight,
 	const FVector& topRight, const FVector& topLeft,

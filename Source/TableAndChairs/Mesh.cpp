@@ -20,6 +20,11 @@ void Mesh::Empty()
 
 void CubeMesh(Mesh& mesh, const FVector& size)
 {
+	CubeMesh(mesh, size, FVector::ZeroVector);
+}
+
+void CubeMesh(Mesh& mesh, const FVector& size, const FVector& vertexOffset)
+{
 	int32 nVertices = 24;
 	int32 nTriangles = 12;
 	mesh.Allocate(nVertices, nTriangles);
