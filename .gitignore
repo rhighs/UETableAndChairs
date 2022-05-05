@@ -1,5 +1,5 @@
 # Project ignore rules
-ProceduralPrimitives.code-workspace
+*.code-workspace
 .vscode/
 Content/StarterContent/
 
