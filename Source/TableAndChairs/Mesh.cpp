@@ -52,27 +52,28 @@ void AddRectangleTo(Mesh& mesh,
 	const FVector& topRight, const FVector& topLeft,
 	const FVector& normal, const FProcMeshTangent& tangent)
 {
-	const int32 index1 = mesh.Vertices.Num();
-	const int32 index2 = mesh.Vertices.Num() + 1;
-	const int32 index3 = mesh.Vertices.Num() + 2;
-	const int32 index4 = mesh.Vertices.Num() + 3;
+	int32 iota = mesh.Vertices.Num();
+	int32 index1 = iota++;
+	int32 index2 = iota++;
+	int32 index3 = iota++;
+	int32 index4 = iota++;
 
-	mesh.Vertices[index1] = bottomLeft;
-	mesh.Vertices[index2] = bottomRight;
-	mesh.Vertices[index3] = topRight;
-	mesh.Vertices[index4] = topLeft;
+	mesh.Vertices.Add(bottomLeft);
+	mesh.Vertices.Add(bottomRight);
+	mesh.Vertices.Add(topRight);
+	mesh.Vertices.Add(topLeft);
 
-	mesh.UVs[index1] = FVector2D(0.0f, 1.0f);
-	mesh.UVs[index2] = FVector2D(1.0f, 1.0f);
-	mesh.UVs[index3] = FVector2D(1.0f, 0.0f);
-	mesh.UVs[index4] = FVector2D(0.0f, 0.0f);
+	mesh.UVs.Add(FVector2D(0.0f, 1.0f));
+	mesh.UVs.Add(FVector2D(1.0f, 1.0f));
+	mesh.UVs.Add(FVector2D(1.0f, 0.0f));
+	mesh.UVs.Add(FVector2D(0.0f, 0.0f));
 
-	mesh.Triangles[mesh.Triangles.Num()] = index1;
-	mesh.Triangles[mesh.Triangles.Num() + 1] = index2;
-	mesh.Triangles[mesh.Triangles.Num() + 2] = index3;
-	mesh.Triangles[mesh.Triangles.Num() + 3] = index4;
+	mesh.Triangles.Add(index1);
+	mesh.Triangles.Add(index2);
+	mesh.Triangles.Add(index3);
+	mesh.Triangles.Add(index4);
 
-	mesh.Normals[index1] = mesh.Normals[index2] = mesh.Normals[index3] = mesh.Normals[index4] = normal;
-	mesh.Tangents[index1] = mesh.Tangents[index2] = mesh.Tangents[index3] = mesh.Tangents[index4] = tangent;
+	mesh.Normals.Append({ normal, normal, normal, normal });
+	mesh.Tangents.Append({ tangent, tangent, tangent, tangent });
 } 
 
