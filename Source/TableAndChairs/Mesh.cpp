@@ -35,15 +35,16 @@ void CubeMesh(Mesh& mesh, const FVector& size, const FVector& vertexOffset)
 	const float OffsetZ = size.Z / 2.0f;
 
 	// Define the 8 corners of the cube
-	const FVector p0 = FVector(OffsetX,  OffsetY, -OffsetZ);
-	const FVector p1 = FVector(OffsetX, -OffsetY, -OffsetZ);
-	const FVector p2 = FVector(OffsetX, -OffsetY,  OffsetZ);
-	const FVector p3 = FVector(OffsetX,  OffsetY,  OffsetZ);
-	const FVector p4 = FVector(-OffsetX, OffsetY, -OffsetZ);
-	const FVector p5 = FVector(-OffsetX, -OffsetY, -OffsetZ);
-	const FVector p6 = FVector(-OffsetX, -OffsetY, OffsetZ);
-	const FVector p7 = FVector(-OffsetX, OffsetY, OffsetZ);
+	const FVector p0 = FVector(OffsetX,  OffsetY, -OffsetZ) + vertexOffset;
+	const FVector p1 = FVector(OffsetX, -OffsetY, -OffsetZ) + vertexOffset;
+	const FVector p2 = FVector(OffsetX, -OffsetY,  OffsetZ) + vertexOffset;
+	const FVector p3 = FVector(OffsetX,  OffsetY,  OffsetZ) + vertexOffset;
+	const FVector p4 = FVector(-OffsetX, OffsetY, -OffsetZ) + vertexOffset;
+	const FVector p5 = FVector(-OffsetX, -OffsetY, -OffsetZ) + vertexOffset;
+	const FVector p6 = FVector(-OffsetX, -OffsetY, OffsetZ) + vertexOffset;
+	const FVector p7 = FVector(-OffsetX, OffsetY, OffsetZ) + vertexOffset;
 
+	// Add each face given their vertices, normals and tangents
 	AddRectangleTo(mesh, p0, p1, p2, p3, FVector::RightVector, FProcMeshTangent(FVector::ForwardVector, false));
 	AddRectangleTo(mesh, p5, p4, p7, p6, FVector::LeftVector, FProcMeshTangent(FVector::ForwardVector, false));
 	AddRectangleTo(mesh, p1, p5, p6, p2, FVector::ForwardVector, FProcMeshTangent(FVector::RightVector, false));
@@ -75,6 +76,8 @@ void AddRectangleTo(Mesh& mesh,
 
 	mesh.Triangles.Add(index1);
 	mesh.Triangles.Add(index2);
+	mesh.Triangles.Add(index3);
+	mesh.Triangles.Add(index1);
 	mesh.Triangles.Add(index3);
 	mesh.Triangles.Add(index4);
 
