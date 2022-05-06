@@ -27,3 +27,4 @@ void AddRectangleTo(Mesh& mesh,
 	const FVector& normal, const FProcMeshTangent& tangent);
 
 
+void BuildCylinder(Mesh& mesh, int32 sides, FVector size, FVector location, bool withTopCap, bool withBottomCap);
