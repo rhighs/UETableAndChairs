@@ -18,19 +18,29 @@ Mesh BlockyTable(const FVector& size)
 	const float topLengthRatio = 1.0f;
 	const float legsLengthRatio = 0.3f;
 
-	const FVector topSize(size.X * topWidthRatio, size.Y * topLengthRatio, size.Z * topHeightRatio);
-	const FVector legsSize(size.X * legsWidthRatio, size.Y * legsLengthRatio, size.Z * legsHeightRatio);
+	FVector topSize(size.X * topWidthRatio, size.Y * topLengthRatio, size.Z * topHeightRatio);
+    FVector legsSize(size.X * legsWidthRatio, size.Y * legsLengthRatio, size.Z * legsHeightRatio);
 
-	const FVector topPosition(0.0f, 0.0f, size.Z - topSize.Z / 2);
+    if (legsSize.Y >= 50.0f) {
+        legsSize.Y = 50.0f;
+    }
+
+    if (legsSize.X >= 50.0f) {
+        legsSize.X = 50.0f;
+    }
+
+    FVector topPosition(0.0f, 0.0f, size.Z - topSize.Z / 2);
 
 	CubeMesh(tableMesh, topSize, topPosition);
 
-	float legRadius = legsSize.X / 2;
-	// Please don't touch this. Pure magic
-	CubeMesh(tableMesh, legsSize, FVector(legRadius - chairRadius, legRadius - chairRadius, legsSize.Z / 2));
-	CubeMesh(tableMesh, legsSize, FVector(- legRadius + chairRadius, legRadius - chairRadius, legsSize.Z / 2));
-	CubeMesh(tableMesh, legsSize, FVector(legRadius - chairRadius, - legRadius + chairRadius, legsSize.Z / 2));
-	CubeMesh(tableMesh, legsSize, FVector(- legRadius + chairRadius, - legRadius + chairRadius, legsSize.Z / 2));
+    const float halfLegX = legsSize.X / 2;
+    const float halfLegY = legsSize.Y / 2;
+    const float halfTopX = topSize.X / 2;
+    const float halfTopY = topSize.Y / 2;
+	CubeMesh(tableMesh, legsSize, FVector(halfLegX - halfTopX, halfLegY - halfTopY, legsSize.Z / 2));
+	CubeMesh(tableMesh, legsSize, FVector(- halfLegX + halfTopX, halfLegY - halfTopY, legsSize.Z / 2));
+	CubeMesh(tableMesh, legsSize, FVector(halfLegX - halfTopX, - halfLegY + halfTopY, legsSize.Z / 2));
+	CubeMesh(tableMesh, legsSize, FVector(- halfLegX + halfTopX, - halfLegY + halfTopY, legsSize.Z / 2));
 
 	return tableMesh;
 }
