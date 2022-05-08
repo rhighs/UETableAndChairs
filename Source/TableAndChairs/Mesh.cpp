@@ -18,6 +18,21 @@ void Mesh::Empty()
 	Tangents.Empty();
 }
 
+void Mesh::ApplyOffset(const FVector& offset)
+{
+	for (auto& vertex : Vertices)
+		vertex += offset;
+}
+
+void Mesh::Rotate(const FVector& rotationDegrees)
+{
+	for (auto& vertex : Vertices)
+	{
+		const FRotator rotator(rotationDegrees.X, rotationDegrees.Y, rotationDegrees.Z);
+		vertex = rotator.RotateVector(vertex);
+	}
+}
+
 void CubeMesh(Mesh& mesh, const FVector& size)
 {
 	CubeMesh(mesh, size, FVector::ZeroVector);
