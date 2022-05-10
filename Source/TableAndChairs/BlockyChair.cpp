@@ -1,6 +1,6 @@
 #include "BlockyChair.h"
 
-Mesh BlockyChair(FVector size)
+Mesh BlockyChair(const FVector& size)
 {
 	Mesh chairMesh;
 
