@@ -2,6 +2,7 @@
 *.code-workspace
 .vscode/
 Content/StarterContent/
+Source/TableAndChairs/TestActor*
 
 # Visual Studio 2015 user specific files
 .vs/
