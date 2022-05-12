@@ -1,6 +1,64 @@
 #include "Mesh.h"
 #include "ProceduralMeshComponent.h"
 
+static TArray<int32> SquareTrianglesIds(int32 topLeft, int32 topRight, int32 bottomLeft, int32 bottomRight)
+{
+    return {
+        topLeft,
+        topRight,
+        bottomRight,
+        bottomRight,
+        bottomLeft,
+        topLeft
+    };
+}
+
+static TArray<FVector> CircularNGonPoints(int32 nPoints, float radius, const FVector& center, float theta)
+{
+	TArray<FVector> points;
+	points.AddUninitialized(nPoints + 1);
+
+	float dt = (PI * 2) / nPoints;
+
+	for (auto& point : points)
+	{
+		point.X = center.X + radius * FMath::Cos(theta);
+		point.Y = center.Y + radius * FMath::Sin(theta);
+		point.Z = center.Z;
+
+		theta += dt;
+	}
+
+	return points;
+}
+
+static TArray<int32> StripFromNGonCouple(const TArrayView<int32>& topNGonIds, const TArrayView<int32>& bottomNGonIds)
+{
+	if (topNGonIds.Num() != bottomNGonIds.Num()) {
+		return {};
+	}
+
+	TArray<int32> ids;
+	// Each iteration apppends 6 ids;
+	ids.Reserve(topNGonIds.Num() * 6);
+
+	auto it1 = topNGonIds.begin();
+	auto it2 = bottomNGonIds.begin();
+
+	for (; it1 < topNGonIds.end() - 1;) {
+		int32 topLeft = *it1;
+		int32 topRight = *(it1 + 1);
+		int32 bottomLeft = *it2;
+		int32 bottomRight = *(it2 + 1);
+
+		ids.Append(SquareTrianglesIds(topLeft, topRight, bottomLeft, bottomRight));
+
+		it1++; it2++;
+	}
+
+	return ids;
+}
+
 void Mesh::Allocate(int32 nVertices, int32 nTriangles)
 {
 	int32 nTriangleIds = nTriangles * 3;
@@ -250,3 +308,98 @@ void BuildCylinder(Mesh& mesh, int32 sides, FVector size, FVector location, bool
 	}
 
 }
+
+static TArray<FVector2D> SphereUVs(float radius, int32 parallels, int32 pointsPerCircle)
+{
+    int32 size = parallels * pointsPerCircle;
+    TArray<FVector2D> uvs;
+    uvs.SetNum(size);
+
+    float xStep = 1.0 / (pointsPerCircle - 1) /*aka meridians*/;
+    float yStep = 1.0 / parallels;
+    for (int32 cy = 0; cy < parallels; cy++)
+    {
+        for (int32 cx = 0; cx < pointsPerCircle; cx++)
+        {
+            uvs[--size] = FVector2D(xStep * cx, yStep * cy);
+        }
+    }
+
+    return uvs;
+}
+
+static TArray<FVector> SphereAxisPoints(float radius, int32 parallels, float angleStep, const FVector& sphereOrigin)
+{
+	TArray<FVector> centers;
+    centers.Reserve(parallels);
+
+    for (int32 i = 0; i < parallels; ++i)
+    {
+        float currentAngle = i * angleStep;
+        float unitHeight = FMath::Cos(currentAngle);
+        centers.Add(FVector(sphereOrigin.X, sphereOrigin.Y, (unitHeight * radius)));
+    }
+
+    return centers;
+}
+
+static TArray<FVector> SphereNormals(const TArray<FVector>& vertices, const FVector& sphereOrigin)
+{
+	TArray<FVector> normals;
+
+    for (const auto& vertex : vertices)
+    {
+        auto normal = vertex - FVector::ZeroVector;
+        normal.Normalize();
+        normals.Add(normal);
+    }
+
+    return normals;
+}
+
+void SphereMesh(Mesh& mesh, float radius, int32 parallels, int32 meridians)
+{
+	SphereMesh(mesh, radius, parallels, meridians, FVector::ZeroVector);
+}
+
+void SphereMesh(Mesh& mesh, float radius, int32 parallels, int32 meridians, const FVector& sphereOrigin)
+{
+	int32 pointsPerCircle = meridians + 1;
+	int32 nVertices = pointsPerCircle * parallels;
+	float parallelsAngleStep = PI / (parallels - 1);
+
+	mesh.Allocate(nVertices, nVertices * 2);
+
+	TArray<int32> ids;
+    ids.Reserve(nVertices);
+
+	// Find radius at a given distance from the sphere center on the sphere axis using pythagoras
+	// After that create a circle at height `center.Z` with radius `localRadius`
+    for (const auto& center : SphereAxisPoints(radius, parallels, parallelsAngleStep, sphereOrigin))
+    {
+        float localRadius = FMath::Sqrt((radius * radius) - (FMath::Abs(center.Z) * FMath::Abs(center.Z)));
+        mesh.Vertices.Append(CircularNGonPoints(pointsPerCircle, localRadius, center, 0.0f));
+    }
+
+	// Just store ids sequentially for later use, here std::iota would've been useful...
+	for (int32 id = 0; id < mesh.Vertices.Num(); ++id)
+	{
+		ids.Add(id);
+	}
+
+	// Given a top and a bottom circle, connect the two to form a strip made of triangles
+    for (int32 circleStartingId = mesh.Vertices.Num() - pointsPerCircle;
+            circleStartingId - pointsPerCircle >= 0;
+            circleStartingId -= pointsPerCircle)
+    {
+        int32 bottomCircleStartingId = circleStartingId - pointsPerCircle;
+        auto top = TArrayView<int32>(ids).Slice(circleStartingId, pointsPerCircle);
+        auto bottom = TArrayView<int32>(ids).Slice(bottomCircleStartingId, pointsPerCircle);
+
+        mesh.Triangles.Append(StripFromNGonCouple(top, bottom));
+    }
+
+    mesh.Normals.Append(SphereNormals(mesh.Vertices, sphereOrigin));
+    mesh.UVs.Append(SphereUVs(radius, parallels, pointsPerCircle));
+}
+

@@ -47,6 +47,23 @@ void CubeMesh(Mesh& mesh, const FVector& size);
 */
 void CubeMesh(Mesh& mesh, const FVector& size, const FVector& vertexOffset);
 
+/** Generate a spherical mesh given a radius, number of parallels and number of meridians
+* \param a mutable reference to a Mesh where the generated sphere will be added
+* \param the sphere radius
+* \param the number of parallels
+* \param the number of meridians
+*/
+void SphereMesh(Mesh& mesh, float radius, int32 parallels, int32 meridians);
+
+/** Generate a spherical mesh given a radius, number of parallels and number of meridians
+* \param a mutable reference to a Mesh where the generated sphere will be added
+* \param the sphere radius
+* \param the number of parallels
+* \param the number of meridians
+* \param the origin offset
+*/
+void SphereMesh(Mesh& mesh, float radius, int32 parallels, int32 meridians, const FVector& sphereOrigin);
+
 /** Add a 2D rectanle to a given mesh
 * \param a mutable reference to a Mesh where the rectangel will be added
 * \param bottom left vertex position
