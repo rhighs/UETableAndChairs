@@ -102,7 +102,7 @@ void AddRectangleTo(Mesh& mesh,
 
 void BuildCylinder(Mesh& mesh, int32 sides, FVector size, FVector location, bool withTopCap, bool withBottomCap)
 {
-	mesh.Empty();
+	//mesh.Empty();
 
 	int32 vertexCount = 6*sides+2;
 	int32 trianglesCount = 2 * sides;
@@ -115,7 +115,10 @@ void BuildCylinder(Mesh& mesh, int32 sides, FVector size, FVector location, bool
 	auto& tangents = mesh.Tangents;
 
 	float angleStep = 2 * PI / sides;
+	//FVector halfSize = size / 2;
+	FVector halfSize = FVector(size.X / 2, size.Y / 2, size.Z);
 
+	int32 indexOffset = vertices.Num();
 	int32 id = 0;
 	if (withBottomCap)
 	{
@@ -135,15 +138,15 @@ void BuildCylinder(Mesh& mesh, int32 sides, FVector size, FVector location, bool
 			float x = FMath::Cos(PI / 4+angleStep * t);
 			float y = FMath::Sin(PI / 4 + angleStep * t);
 
-			FVector v = FVector(location.X+x * size.X, location.Y+y * size.Y, location.Z);
+			FVector v = FVector(location.X+x * halfSize.X, location.Y+y * halfSize.Y, location.Z);
 
 			vertices.Add(v);
 
 			int32 id2 = (t % sides) + 1;
 
-			triangles.Add(0);
-			triangles.Add(id);
-			triangles.Add(id2);
+			triangles.Add(indexOffset);
+			triangles.Add(id + indexOffset);
+			triangles.Add(id2 + indexOffset);
 
 			normals.Add(FVector::DownVector);
 			tangents.Add(FProcMeshTangent(FVector::LeftVector, false));
@@ -163,23 +166,23 @@ void BuildCylinder(Mesh& mesh, int32 sides, FVector size, FVector location, bool
 		float x2 = FMath::Cos(PI / 4 + angleStep * (t + 1));
 		float y2 = FMath::Sin(PI / 4 + angleStep * (t + 1));
 
-		FVector bottomRight(location.X+x1*size.X, location.Y + y1*size.Y, location.Z);
-		FVector topRight(location.X + x1 * size.X, location.Y + y1 * size.Y, location.Z+size.Z);
-		FVector bottomLeft(location.X + x2 * size.X, location.Y + y2 * size.Y, location.Z);
-		FVector topLeft(location.X + x2 * size.X, location.Y + y2 * size.Y, location.Z+size.Z);
+		FVector bottomRight(location.X+x1* halfSize.X, location.Y + y1* halfSize.Y, location.Z);
+		FVector topRight(location.X + x1 * halfSize.X, location.Y + y1 * halfSize.Y, location.Z+size.Z);
+		FVector bottomLeft(location.X + x2 * halfSize.X, location.Y + y2 * halfSize.Y, location.Z);
+		FVector topLeft(location.X + x2 * halfSize.X, location.Y + y2 * halfSize.Y, location.Z+size.Z);
 		vertices.Add(bottomRight);	// id
 		vertices.Add(topRight);		// id+1
 		vertices.Add(bottomLeft);	// id+2
 		vertices.Add(topLeft);		// id+3
 
 		// bottom-right triangle
-		triangles.Add(id);
-		triangles.Add(id + 1);
-		triangles.Add(id + 2);
+		triangles.Add(id + indexOffset);
+		triangles.Add(id + 1 + indexOffset);
+		triangles.Add(id + 2 + indexOffset);
 		// top-left triangle
-		triangles.Add(id + 2);
-		triangles.Add(id + 1);
-		triangles.Add(id + 3);
+		triangles.Add(id + 2 + indexOffset);
+		triangles.Add(id + 1 + indexOffset);
+		triangles.Add(id + 3 + indexOffset);
 
 		uv.Add(FVector2D(1 - (1.f / sides) * t, 0)); // bottomRight
 		uv.Add(FVector2D(1 - (1.f / sides) * t, 1)); // topRight
@@ -221,7 +224,7 @@ void BuildCylinder(Mesh& mesh, int32 sides, FVector size, FVector location, bool
 			float x = FMath::Cos(PI / 4 + angleStep * (t-1));
 			float y = FMath::Sin(PI / 4 + angleStep * (t-1));
 
-			FVector v = FVector(location.X+x * size.X, location.Y+ y * size.Y, location.Z+size.Z);
+			FVector v = FVector(location.X+x * halfSize.X, location.Y+ y * halfSize.Y, location.Z+size.Z);
 
 			vertices.Add(v);
 
@@ -230,9 +233,9 @@ void BuildCylinder(Mesh& mesh, int32 sides, FVector size, FVector location, bool
 			if (id2 > centerID + sides)
 				id2 = centerID + 1;
 
-			triangles.Add(centerID);
-			triangles.Add(id2);
-			triangles.Add(id);
+			triangles.Add(centerID + indexOffset);
+			triangles.Add(id2 + indexOffset);
+			triangles.Add(id + indexOffset);
 
 			normals.Add(FVector::UpVector);
 			tangents.Add(FProcMeshTangent(FVector::ForwardVector, false));

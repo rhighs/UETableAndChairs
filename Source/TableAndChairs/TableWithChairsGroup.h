@@ -5,21 +5,20 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "ProceduralMeshComponent.h"
+#include "Components/SphereComponent.h"
 #include "Mesh.h"
+#include "Resizable.h"
 #include "TableWithChairsGroup.generated.h"
 
 UCLASS()
-class TABLEANDCHAIRS_API ATableWithChairsGroup : public AActor
+class TABLEANDCHAIRS_API ATableWithChairsGroup : public AActor, public IResizable
 {
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	ATableWithChairsGroup();
 
-
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void OnConstruction(const FTransform& Transform) override;
 #if WITH_EDITOR
@@ -27,7 +26,6 @@ protected:
 #endif
 
 public:	
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY(EditAnywhere, Category = "Mesh")
@@ -42,16 +40,27 @@ public:
 		uint32 _height = 15;
 	UPROPERTY(EditAnywhere, meta = (ClampMin = "3", ClampMax = "30", UIMin = "3", UIMax = "30"))
 		uint32 _tableSides = 3;
+	UPROPERTY(EditAnywhere, meta = (ClampMin = "1", ClampMax = "500", UIMin = "1", UIMax = "500"))
+	float _distanceChairTable = 10;
+	UPROPERTY(EditAnywhere, meta = (ClampMin = "1", ClampMax = "100", UIMin = "1", UIMax = "100"))
+	float _chairPadding = 2;
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<USphereComponent*> CornerSphereComponents;
+
+	virtual FVector GetResizableLocation() override;
 
 private:
 	FVector _tableSize;
 	float _spaceBetweenChairs;
 	FVector _chairSize;
 	int32 _numberOfChairs;
+	TArray<FVector> _shapeCorners;
 
-	void BuildTable(Mesh& mesh, FVector size);
-	void BuildChair(Mesh& mesh, FVector heightAndPosition);
+	void BuildRectangularTable(Mesh& mesh, FVector size);
+	void BuildChair(Mesh& mesh, FVector positionAndHeight);
 
 	void _updateTable();
+	void _putCornersInPlace();
 	void _placeChairs();
 };
