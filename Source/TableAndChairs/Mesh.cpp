@@ -1,12 +1,15 @@
 #include "Mesh.h"
+#include "ProceduralMeshComponent.h"
 
 void Mesh::Allocate(int32 nVertices, int32 nTriangles)
 {
+	int32 nTriangleIds = nTriangles * 3;
+
 	Vertices.Reserve(nVertices);
-	Triangles.Reserve(nTriangles * 3);
 	UVs.Reserve(nVertices);
 	Normals.Reserve(nVertices);
 	Tangents.Reserve(nVertices);
+	Triangles.Reserve(nTriangleIds);
 }
 
 void Mesh::Empty()
@@ -18,7 +21,7 @@ void Mesh::Empty()
 	Tangents.Empty();
 }
 
-void Mesh::ApplyOffset(const FVector& offset)
+void Mesh::Translate(const FVector& offset)
 {
 	for (auto& vertex : Vertices)
 		vertex += offset;

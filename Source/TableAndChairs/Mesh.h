@@ -22,7 +22,7 @@ struct Mesh
 	/** Increment each vertex in `Vertices` by a given offset
 	* \param the vector to consider as offset
 	*/
-	void ApplyOffset(const FVector& offset);
+	void Translate(const FVector& offset);
 
 	/** Rotate each vertex in `Vertices` by a given triplet of angles (in deg)
 	* \param the vector to consider as triplet of angles
