@@ -2,17 +2,21 @@
 
 
 #include "TableAndChairsGameModeBase.h"
-
-#include "PlayerPawn.h"
 #include "TableResizerController.h"
 
 ATableAndChairsGameModeBase::ATableAndChairsGameModeBase()
 {
+	DefaultPawnClass = nullptr;
 	PlayerControllerClass = ATableResizerController::StaticClass();
 }
 
 void ATableAndChairsGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+void ATableAndChairsGameModeBase::StartPlay()
+{
+	Super::StartPlay();
 }
 
