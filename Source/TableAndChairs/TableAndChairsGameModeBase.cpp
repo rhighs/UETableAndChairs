@@ -3,12 +3,12 @@
 
 #include "TableAndChairsGameModeBase.h"
 
-#include "PlayerPawn.h"
-#include "TableResizerController.h"
+//#include "PlayerPawn.h"
+#include "MousePlayerController.h"
 
 ATableAndChairsGameModeBase::ATableAndChairsGameModeBase()
 {
-	PlayerControllerClass = ATableResizerController::StaticClass();
+	PlayerControllerClass = AMousePlayerController::StaticClass();
 }
 
 void ATableAndChairsGameModeBase::BeginPlay()

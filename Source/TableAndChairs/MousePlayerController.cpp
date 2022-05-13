@@ -29,7 +29,6 @@ AMousePlayerController::AMousePlayerController()
 
 void AMousePlayerController::PlayerTick(float DeltaTime)
 {
-
 	Super::PlayerTick(DeltaTime);
 	if (!bCornerPressed) return;
 

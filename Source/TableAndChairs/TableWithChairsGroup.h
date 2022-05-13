@@ -6,7 +6,9 @@
 #include "GameFramework/Actor.h"
 #include "ProceduralMeshComponent.h"
 #include "Components/SphereComponent.h"
+#include "Components/SplineComponent.h"
 #include "Mesh.h"
+#include "BlockyChair.h"
 #include "Resizable.h"
 #include "TableWithChairsGroup.generated.h"
 
@@ -45,11 +47,14 @@ public:
 	UPROPERTY(EditAnywhere, meta = (ClampMin = "1", ClampMax = "100", UIMin = "1", UIMax = "100"))
 	float _chairPadding = 2;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category = "Collision")
 	TArray<USphereComponent*> CornerSphereComponents;
 
-	virtual FVector GetResizableLocation() override;
+	UPROPERTY(EditAnywhere, Category = "Chairs")
+	USplineComponent* ChairsSplineComponent;
 
+	virtual FVector GetResizableLocation() override;
+	virtual void Resize(const FVector& newSize) override;
 private:
 	FVector _tableSize;
 	float _spaceBetweenChairs;
@@ -62,5 +67,6 @@ private:
 
 	void _updateTable();
 	void _putCornersInPlace();
+	void _updateSpline();
 	void _placeChairs();
 };

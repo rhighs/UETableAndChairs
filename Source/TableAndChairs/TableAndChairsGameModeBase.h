@@ -13,5 +13,8 @@ UCLASS()
 class TABLEANDCHAIRS_API ATableAndChairsGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
+
+		ATableAndChairsGameModeBase();
+protected:
+	virtual void BeginPlay() override;
 };

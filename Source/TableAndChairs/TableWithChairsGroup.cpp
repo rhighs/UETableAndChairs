@@ -15,19 +15,24 @@ ATableWithChairsGroup::ATableWithChairsGroup()
 	_material = CreateDefaultSubobject<UMaterialInterface>(TEXT("Material"));
 
 	SetSize(FVector(50, 30, 30));
-	_chairSize = FVector(10, 10, GetSize().Z / 2);
-	_spaceBetweenChairs = 5;
+	_chairSize = FVector(20, 20, GetSize().Z/2);
+	_spaceBetweenChairs = 3;
 	float chairOccupiedWidth = _chairSize.X + 2 * _spaceBetweenChairs;
 	_numberOfChairs = 2 * (GetSize().X / chairOccupiedWidth)
 					+ 2 * (GetSize().Y / chairOccupiedWidth);
 	CornerSphereComponents.Reserve(4);
 	for (int i=0; i< 4; ++i)
 	{
-		FString j = "Corner" + i;
+
+		FString j = "Corner" + i;//FString::FromInt(i);
 		CornerSphereComponents.Add(CreateDefaultSubobject<USphereComponent>(FName(*j)));
 
 		CornerSphereComponents[i]->SetupAttachment(_proceduralMesh);
+		CornerSphereComponents[i]->SetSphereRadius(3);
 	}
+
+	ChairsSplineComponent = CreateDefaultSubobject<USplineComponent>(TEXT("Chairs Path Spline"));
+	ChairsSplineComponent->SetupAttachment(_proceduralMesh);
 }
 
 
@@ -48,17 +53,20 @@ void ATableWithChairsGroup::Resize(const FVector& newSize)
 	_proceduralMesh->CreateMeshSection_LinearColor(0, table.Vertices, table.Triangles, table.Normals, table.UVs, {}, table.Tangents, createCollision);
 
 	_putCornersInPlace();
+	_updateSpline();
 	_placeChairs();
 }
 
 void ATableWithChairsGroup::BuildRectangularTable(Mesh& mesh, FVector size)
 {
 	Mesh& table = mesh;
-	CubeMesh(table, FVector(size.X, size.Y, 3), FVector(0, 0, size.Z));
-	BuildCylinder(table, 4, FVector(2, 2, size.Z), FVector(-size.X / 2, -size.Y / 2, 0), false, true);
-	BuildCylinder(table, 4, FVector(2, 2, size.Z), FVector(size.X / 2, -size.Y / 2, 0), false, true);
-	BuildCylinder(table, 4, FVector(2, 2, size.Z), FVector(-size.X / 2, size.Y / 2, 0), false, true);
-	BuildCylinder(table, 4, FVector(2, 2, size.Z), FVector(size.X / 2, size.Y / 2, 0), false, true);
+	float sqrt_2 = 1.41421356237;
+	BuildCylinder(table, 4, FVector(sqrt_2 * size.X, sqrt_2 * size.Y, 3), FVector(0, 0, size.Z), true, true);
+	float padding = 0.8;
+	BuildCylinder(table, 6, FVector(2, 2, size.Z), FVector(-padding*size.X / 2, -padding*size.Y / 2, 0), false, true);
+	BuildCylinder(table, 6, FVector(2, 2, size.Z), FVector( padding*size.X / 2, -padding*size.Y / 2, 0), false, true);
+	BuildCylinder(table, 6, FVector(2, 2, size.Z), FVector(-padding*size.X / 2,  padding*size.Y / 2, 0), false, true);
+	BuildCylinder(table, 6, FVector(2, 2, size.Z), FVector( padding*size.X / 2,  padding*size.Y / 2, 0), false, true);
 
 	_shapeCorners.Add(FVector(-size.X / 2,  size.Y / 2, 0));
 	_shapeCorners.Add(FVector( size.X / 2,  size.Y / 2, 0));
@@ -76,11 +84,13 @@ void ATableWithChairsGroup::BuildChair(Mesh& mesh, FVector positionAndHeight)
 	FVector size = FVector(_chairSize.X, _chairSize.Y, _chairSize.Z);
 	FVector pos = FVector(positionAndHeight.X, _distanceChairTable, 0);
 	Mesh& table = mesh;
-	CubeMesh(table, FVector(size.X, size.Y, 3), FVector(pos.X, pos.Y, size.Z));
-	BuildCylinder(table, 4, FVector(2, 2, size.Z), FVector(pos.X -size.X / 2, pos.Y -size.Y / 2, 0), false, true);
-	BuildCylinder(table, 4, FVector(2, 2, size.Z), FVector(pos.X +size.X / 2, pos.Y -size.Y / 2, 0), false, true);
-	BuildCylinder(table, 4, FVector(2, 2, size.Z), FVector(pos.X -size.X / 2, pos.Y+size.Y / 2, 0), false, true);
-	BuildCylinder(table, 4, FVector(2, 2, size.Z), FVector(pos.X +size.X / 2, pos.Y+size.Y / 2, 0), false, true);
+	float sqrt_2 = 1.41421356237;
+	BuildCylinder(table, 4, FVector(sqrt_2*size.X, sqrt_2*size.Y, 3), FVector(pos.X, pos.Y, size.Z), true, true);
+	float padding = 0.8;
+	BuildCylinder(table, 5, FVector(2, 2, size.Z), FVector(pos.X -padding*size.X / 2, pos.Y -padding*size.Y / 2, 0), false, true);
+	BuildCylinder(table, 5, FVector(2, 2, size.Z), FVector(pos.X +padding*size.X / 2, pos.Y -padding*size.Y / 2, 0), false, true);
+	BuildCylinder(table, 5, FVector(2, 2, size.Z), FVector(pos.X -padding*size.X / 2, pos.Y +padding*size.Y / 2, 0), false, true);
+	BuildCylinder(table, 5, FVector(2, 2, size.Z), FVector(pos.X +padding*size.X / 2, pos.Y +padding*size.Y / 2, 0), false, true);
 }
 
 #if WITH_EDITOR
@@ -135,12 +145,12 @@ void ATableWithChairsGroup::_updateTable()
 
 void ATableWithChairsGroup::_putCornersInPlace()
 {
-	static TArray<FVector> quadrantsDir{ FVector(1,  1, 1),
+	static TArray<FVector> quadrantsSigns{ FVector(1,  1, 1),
 										 FVector(-1,  1, 1),
 										 FVector(-1, -1, 1),
 										 FVector(1, -1, 1) };
 
-	if (CornerSphereComponents.Num() != quadrantsDir.Num())
+	if (CornerSphereComponents.Num() != quadrantsSigns.Num())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("corner hitboxes can't be positioned"));
 		return;
@@ -149,46 +159,65 @@ void ATableWithChairsGroup::_putCornersInPlace()
 	int32 id = 0;
 	for (auto& corner : CornerSphereComponents)
 	{
-		FVector sphereLocation = FVector(GetSize().X / 2, GetSize().Y / 2, GetSize().Z) * quadrantsDir[id];
+		FVector sphereLocation = FVector(GetSize().X / 2, GetSize().Y / 2, GetSize().Z) * quadrantsSigns[id];
 		corner->SetRelativeLocation(sphereLocation);
 
 		++id;
 	}
 }
 
+void ATableWithChairsGroup::_updateSpline()
+{
+	ChairsSplineComponent->ClearSplinePoints();
+	// clockwise arrangement of points
+	static TArray<FVector> quadrantsSigns{ FVector(-1, -1, 1),
+										   FVector( 1, -1, 1),
+										   FVector( 1,  1, 1),
+										   FVector(-1,  1, 1),
+										   FVector(-1, -1, 1) };
+	FVector lineSize = GetSize()/2 + FVector(_distanceChairTable, _distanceChairTable, 0);
+	lineSize.Z = 0;
+
+	int id = 0;
+	for (const auto& signs : quadrantsSigns)
+	{
+		ChairsSplineComponent->AddSplinePoint(GetActorLocation() + lineSize * signs, ESplineCoordinateSpace::Local, false);
+		ChairsSplineComponent->SetSplinePointType(id, ESplinePointType::Linear);
+		++id;
+	}
+}
+
 void ATableWithChairsGroup::_placeChairs()
 {
-	/*
-	if(chairWidth <= side length
-	*/
-
-	int32 maxSeats = _maxSeatsCount();
-	for (int32 chairCount = 0; chairCount < maxSeats; ++chairCount)
-	{
-		FVector seatPosition{};
-		FVector seatNormal{};
-		_getPointAndNormalInPerimeter(float(chairCount)/ maxSeats, seatPosition, seatNormal);
-	}
-	// ...
-	// ...
-	// ...
-
-	FVector2D chairPosition = FVector2D(-GetSize().X / 2, -GetSize().Y / 2);
-	float chairHeight = _chairSize.Z;
+	float chairOccupiedWidth = _chairSize.X + 2 * _spaceBetweenChairs;
+	float currentDistance = _distanceChairTable+chairOccupiedWidth/2;
+	FVector tablePosition = GetActorLocation();
+	FVector chairPosAndHeight = FVector::ZeroVector; 
+	//float chairHeight = _chairSize.Z;
 	Mesh firstChair{};
-	BuildChair(firstChair, FVector(chairPosition, chairHeight));
+	//BuildChair(firstChair, FVector(chairPosition, chairHeight));
+
+	float splineLength = ChairsSplineComponent->GetSplineLength();
+	float distancePoint1 = ChairsSplineComponent->GetDistanceAlongSplineAtSplinePoint(1);
+	while (currentDistance <= (distancePoint1 - _distanceChairTable) )
+	{
+		chairPosAndHeight = ChairsSplineComponent->GetLocationAtDistanceAlongSpline(currentDistance, ESplineCoordinateSpace::Local);
+		chairPosAndHeight.Z = _chairSize.Z;
+		BuildChair(firstChair, chairPosAndHeight);
+
+		currentDistance += chairOccupiedWidth;
+	}
 
 	bool createCollision = false;
 	_proceduralMesh->CreateMeshSection_LinearColor(1, firstChair.Vertices, firstChair.Triangles, firstChair.Normals,
 												   firstChair.UVs, {}, firstChair.Tangents, createCollision);
+	_proceduralMesh->SetMaterial(1, _material);
 }
 
 void ATableWithChairsGroup::OnConstruction(const FTransform& Transform)
 {
 	_updateTable();
-
 	_proceduralMesh->SetMaterial(0, _material);
-
 
 	for (auto& corner : CornerSphereComponents)
 	{
@@ -197,6 +226,7 @@ void ATableWithChairsGroup::OnConstruction(const FTransform& Transform)
 	}
 
 	_putCornersInPlace();
-
+	_updateSpline();
+	ChairsSplineComponent->SetDrawDebug(true);
 	SetActorEnableCollision(true);
 }
